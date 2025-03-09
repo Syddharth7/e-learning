@@ -12,13 +12,13 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Signup" component={SignupScreen} />
-        <Stack.Screen name="Choice" component={ChoiceScreen} />
-        <Stack.Screen name="Subjects" component={SubjectScreen} />
-        <Stack.Screen name="Quiz" component={QuizScreen} />
-        <Stack.Screen name="LessonDetail" component={LessonDetail} />
+      <Stack.Navigator initialRouteName="Login"  options={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={LoginScreen}  options={{ headerShown: false }} />
+        <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Choice" component={ChoiceScreen} options={{ headerShown: false }}/>
+        <Stack.Screen name="Subjects" component={SubjectScreen} options={{ headerShown: false }}/>
+        <Stack.Screen name="Quiz" component={QuizScreen} options={{ headerShown: false }}/>
+        <Stack.Screen name="LessonDetail" component={LessonDetail} options={{ headerShown: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

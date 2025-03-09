@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, SafeAreaView } from 'react-native';
 import { supabase } from '../supabase';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LessonDetailScreen({ route, navigation }) {
   const { lessonId, subjectId, progress } = route.params;
@@ -55,19 +56,147 @@ export default function LessonDetailScreen({ route, navigation }) {
   if (!lesson) return <Text>Lesson not found</Text>;
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>{lesson.title}</Text>
-      <Text style={styles.content}>{lesson.content}</Text>
-      {!isCompleted && (
-        <Button title="Complete Lesson" onPress={completeLesson} style={styles.completeButton} />
-      )}
-    </ScrollView>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <View style={styles.backButtonCircle}>
+             <Ionicons name="arrow-back" size={24} color="#1E88E5" />
+          </View>
+        </TouchableOpacity>
+        <Image 
+          source={require('../assets/logo.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <TouchableOpacity style={styles.settingsButton}>
+          <Ionicons name="settings" size={24} color="#2196F3" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.scrollContainer}>
+        <View style={styles.chalkboardContainer}>
+          <View style={styles.chalkboard}>
+            <Text style={styles.chalkboardTitle}>{lesson.title}</Text>
+          </View>
+        </View>
+
+        <View style={styles.contentContainer}>
+          <Text style={styles.content}>{lesson.content}</Text>
+        </View>
+      </ScrollView>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity 
+          style={styles.completeButton}
+          onPress={completeLesson}
+          disabled={isCompleted}
+        >
+          <Text style={styles.completeButtonText}>Complete Lesson</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f0f4f8' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20, color: '#333' },
-  content: { fontSize: 16, color: '#666', marginBottom: 20 },
-  completeButton: { marginTop: 20 },
+  container: { 
+    flex: 1, 
+    backgroundColor: 'white' 
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    backgroundColor: 'white',
+    zIndex: 1
+  },
+  backButton: {
+    padding: 5
+  },
+  backButtonCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E6EEFF',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: '#333'
+  },
+  logo: {
+    height: 40,
+    width: 120
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E6EFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  settingsIcon: {
+    fontSize: 24
+  },
+  scrollContainer: {
+    flex: 1
+  },
+  chalkboardContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingHorizontal: 20,
+    marginBottom: 20
+  },
+  chalkboard: {
+    width: '100%',
+    aspectRatio: 1.8,
+    backgroundColor: '#2A7E3C',
+    borderRadius: 8,
+    padding: 20,
+    borderWidth: 8,
+    borderColor: '#C4996C',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  chalkboardTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 32
+  },
+  contentContainer: {
+    padding: 20,
+    paddingTop: 0
+  },
+  content: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    backgroundColor: 'white'
+  },
+  completeButton: {
+    backgroundColor: '#4A8FE7',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    width: 200,
+    alignItems: 'center'
+  },
+  completeButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold'
+  }
 });

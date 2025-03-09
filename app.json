@@ -26,12 +26,14 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font"
     ],
     "extra": {
       "eas": {
         "projectId": "b5e55187-55f7-40f9-bbb3-e56ae10e8877"
       }
-    }
+    },
+    "owner": "syddharth"
   }
 }

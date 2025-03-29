@@ -2,10 +2,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
-import ChoiceScreen from './screens/ChoiceScreen';
-import SubjectScreen from './screens/SubjectScreen';
-import QuizScreen from './screens/QuizScreen';
+import ChoiceScreen from './screens/ChoiceScreen2';
+import SubjectScreen from './screens/SubjectScreen2';
+import QuizScreen from './screens/QuizScreen2';
 import LessonDetail from './screens/LessonDetailScreen'; // New screen
+import LessonListScreen from './screens/LessonListScreen';
 
 const Stack = createStackNavigator();
 
@@ -19,6 +20,7 @@ export default function App() {
         <Stack.Screen name="Subjects" component={SubjectScreen} options={{ headerShown: false }}/>
         <Stack.Screen name="Quiz" component={QuizScreen} options={{ headerShown: false }}/>
         <Stack.Screen name="LessonDetail" component={LessonDetail} options={{ headerShown: false }}/>
+        <Stack.Screen name="LessonListScreen" component={LessonListScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -6,7 +6,7 @@ import { Audio } from 'expo-av';
 import AppLoading from 'expo-app-loading';
 
 import logo from '../assets/logo.png';
-import character from '../assets/characterr.png';
+import character from '../assets/3d characters.png';
 
 // Get device dimensions
 const { width, height } = Dimensions.get('window');

@@ -100,7 +100,7 @@ export default function SignupScreen({ navigation }) {
       <View style={styles.characterContainer}>
         {/* Animated character image */}
         <Animated.Image 
-          source={require('../assets/characterr.png')} 
+          source={require('../assets/3d characters.png')} 
           style={[
             styles.charactersImage,
             { transform: [{ translateY: characterYPosition }] }

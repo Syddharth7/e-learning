@@ -1,25 +1,31 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, SafeAreaView, Dimensions, ScrollView, Animated } from 'react-native';
 import { useFonts } from 'expo-font';
-import { Audio } from 'expo-av';
+import { Audio } from 'expo-av'; // Import Audio from expo-av
 import logo from '../assets/logo.png';
 import character from '../assets/characters.png';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ChoiceScreen({ navigation }) {
+  // Get screen dimensions
   const { width, height } = Dimensions.get('window');
   const [screenDimensions, setScreenDimensions] = React.useState({ width, height });
   
+  // Animation values
   const characterYPosition = useRef(new Animated.Value(0)).current;
-  const startTextPosition = useRef(new Animated.Value(-width)).current;
+  const startTextPosition = useRef(new Animated.Value(-width)).current; // Changed to start from left (-width)
   
+  // Sound references
   const [lessonsSound, setLessonsSound] = React.useState();
   const [quizSound, setQuizSound] = React.useState();
   const [leaderboardSound, setLeaderboardSound] = React.useState();
   
+  // Load sound effects
   useEffect(() => {
+    // Load sound files
     async function loadSounds() {
       try {
+        // You'll need to add these sound files to your assets folder
         const lessonsSoundObject = new Audio.Sound();
         await lessonsSoundObject.loadAsync(require('../assets/sounds/button_click.mp3'));
         setLessonsSound(lessonsSoundObject);
@@ -38,6 +44,7 @@ export default function ChoiceScreen({ navigation }) {
     
     loadSounds();
     
+    // Unload sounds when component unmounts
     return () => {
       if (lessonsSound) lessonsSound.unloadAsync();
       if (quizSound) quizSound.unloadAsync();
@@ -45,6 +52,7 @@ export default function ChoiceScreen({ navigation }) {
     };
   }, []);
   
+  // Function to play button sounds
   const playLessonsSound = async () => {
     try {
       if (lessonsSound) {
@@ -78,20 +86,25 @@ export default function ChoiceScreen({ navigation }) {
     }
   };
   
+  // Listen for dimension changes
   React.useEffect(() => {
     const updateDimensions = () => {
       const { width, height } = Dimensions.get('window');
       setScreenDimensions({ width, height });
     };
     
+    // Add event listener
     const dimensionsSubscription = Dimensions.addEventListener('change', updateDimensions);
 
+    // Clean up event listener
     return () => {
       dimensionsSubscription.remove();
     };
   }, []);
   
+  // Set up animations
   useEffect(() => {
+    // Character bounce animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(characterYPosition, {
@@ -107,6 +120,7 @@ export default function ChoiceScreen({ navigation }) {
       ])
     ).start();
     
+    // Let's Start! text slide-in animation (from left)
     Animated.timing(startTextPosition, {
       toValue: 0,
       duration: 800,
@@ -114,10 +128,12 @@ export default function ChoiceScreen({ navigation }) {
     }).start();
   }, []);
   
+  // Determine if we're on a small screen
   const isSmallScreen = screenDimensions.width < 360;
   const isMediumScreen = screenDimensions.width >= 360 && screenDimensions.width < 768;
   const isLargeScreen = screenDimensions.width >= 768;
   
+  // Calculate responsive sizes
   const logoWidth = isSmallScreen ? 250 : (isMediumScreen ? 300 : 350);
   const logoHeight = isSmallScreen ? 85 : (isMediumScreen ? 100 : 120);
   const buttonWidth = isSmallScreen ? '90%' : (isMediumScreen ? '70%' : '50%');
@@ -126,10 +142,12 @@ export default function ChoiceScreen({ navigation }) {
   const buttonFontSize = isSmallScreen ? 16 : 18;
   const iconSize = isSmallScreen ? 20 : 24;
   
+  // Load the DynaPuff font - make sure the font name matches exactly
   const [fontsLoaded] = useFonts({
     'DynaPuff': require('../assets/fonts/Dynapuff.ttf'),
   });
   
+  // Make sure we don't render until fonts are loaded
   if (!fontsLoaded) {
     return null;
   }
@@ -143,6 +161,7 @@ export default function ChoiceScreen({ navigation }) {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Header with back button and settings */}
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
@@ -156,12 +175,14 @@ export default function ChoiceScreen({ navigation }) {
           </TouchableOpacity>
         </View>
         
+        {/* Logo */}
         <Image 
           source={logo} 
           style={[styles.logoImage, { width: logoWidth, height: logoHeight }]} 
           resizeMode="contain"
         />
         
+        {/* Characters with up/down animation */}
         <Animated.Image 
           source={character} 
           style={[
@@ -175,6 +196,7 @@ export default function ChoiceScreen({ navigation }) {
           resizeMode="contain"
         />
         
+        {/* Let's Start! text with slide-in animation from left */}
         <Animated.Text 
           style={[
             styles.startText, 
@@ -187,6 +209,7 @@ export default function ChoiceScreen({ navigation }) {
           LET'S START!
         </Animated.Text>
         
+        {/* Menu Buttons */}
         <View style={[styles.buttonContainer, { marginTop: isSmallScreen ? 5 : 10 }]}>
           <TouchableOpacity 
             style={[
@@ -201,7 +224,7 @@ export default function ChoiceScreen({ navigation }) {
             ]}
             onPress={() => {
               playLessonsSound();
-              navigation.navigate('SubjectSelection', { mode: 'subjects' });
+              navigation.navigate('Subjects', { mode: 'subjects' });
             }}
           >
             <Ionicons name="book" size={iconSize} color="white" />
@@ -221,7 +244,7 @@ export default function ChoiceScreen({ navigation }) {
             ]}
             onPress={() => {
               playQuizSound();
-              navigation.navigate('SubjectSelection', { mode: 'quizzes' });
+              navigation.navigate('Quiz', { mode: 'quizzes' });
             }}
           >
             <Ionicons name="list" size={iconSize} color="white" />
@@ -241,6 +264,7 @@ export default function ChoiceScreen({ navigation }) {
             ]}
             onPress={() => {
               playLeaderboardSound();
+              // Keep your existing navigation or logic here if needed
             }}
           >
             <Ionicons name="trophy" size={iconSize} color="white" />

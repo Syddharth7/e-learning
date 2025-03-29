@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image, SafeAreaView, Dimensions } from 'react-native';
 import { supabase } from '../supabase';
 import { Ionicons } from '@expo/vector-icons';
-import logo from '../assets/logo.png'
-import booksGif from '../assets/book.gif'
+import logo from '../assets/logo.png';
+import booksGif from '../assets/book.gif';
 
 export default function SubjectScreen({ route, navigation }) {
   const { mode } = route.params;
@@ -108,7 +108,7 @@ export default function SubjectScreen({ route, navigation }) {
         !isSubjectUnlocked(item.order_num) && styles.lockedButton
       ]}
       onPress={() =>
-        isSubjectUnlocked(item.order_num) && navigation.navigate('Subjects', { subjectId: item.id, mode: 'subjects' })
+        isSubjectUnlocked(item.order_num) && navigation.navigate('LessonListScreen', { subjectId: item.id })
       }
       disabled={!isSubjectUnlocked(item.order_num)}
     >

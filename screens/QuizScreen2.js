@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, StatusBar } from 'react-native';
 import { supabase } from '../supabase';
 import { useFonts } from 'expo-font';
-import QuizSubjectSelection from './QuizSubjectSelection.js';
+import QuizSubjectSelection from './QuizSubjectSelection';
 import QuizList from './QuizList';
 import QuizQuestion from './QuizQuestion';
 import { styles } from './styles';
@@ -44,12 +44,10 @@ export default function QuizScreen({ route, navigation }) {
             .eq('user_id', userId);
           if (progressError) throw progressError;
           setProgress(progressData || []);
-          
+
           let totalPoints = 0;
           progressData?.forEach(item => {
-            if (item.quiz_score) {
-              totalPoints += item.quiz_score;
-            }
+            if (item.quiz_score) totalPoints += item.quiz_score;
           });
           setPoints(totalPoints);
         } else {
@@ -61,11 +59,21 @@ export default function QuizScreen({ route, navigation }) {
             .order('order_num');
           if (lessonsError) throw lessonsError;
 
+          const lessonIds = lessonsData.map(l => l.id);
+          if (lessonIds.length === 0) throw new Error('No lessons found for this subject');
+
           const { data: quizzesData, error: quizzesError } = await supabase
             .from('quizzes')
             .select('*')
-            .in('lesson_id', lessonsData.map(l => l.id));
+            .in('lesson_id', lessonIds)
+            .order('lesson_id', { ascending: true }); // Sort by lesson_id
           if (quizzesError) throw quizzesError;
+
+          const validQuizzes = quizzesData.filter(q => q.lesson_id !== null);
+          if (validQuizzes.length !== quizzesData.length) {
+            console.warn('Some quizzes have missing lesson_id values');
+          }
+          setQuizzes(validQuizzes || []);
 
           const { data: progressData, error: progressError } = await supabase
             .from('user_progress')
@@ -75,7 +83,6 @@ export default function QuizScreen({ route, navigation }) {
           if (progressError) throw progressError;
 
           setLessons(lessonsData || []);
-          setQuizzes(quizzesData || []);
           setProgress(progressData || []);
         }
       } catch (error) {

@@ -7,6 +7,7 @@ import SubjectScreen from './screens/SubjectScreen2';
 import QuizScreen from './screens/QuizScreen2';
 import LessonDetail from './screens/LessonDetailScreen'; // New screen
 import LessonListScreen from './screens/LessonListScreen';
+import RankingScreen from './screens/RankingScreen';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +22,7 @@ export default function App() {
         <Stack.Screen name="Quiz" component={QuizScreen} options={{ headerShown: false }}/>
         <Stack.Screen name="LessonDetail" component={LessonDetail} options={{ headerShown: false }}/>
         <Stack.Screen name="LessonListScreen" component={LessonListScreen} />
+        <Stack.Screen name="Ranking" component={RankingScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

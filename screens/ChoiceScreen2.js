@@ -264,6 +264,7 @@ export default function ChoiceScreen({ navigation }) {
             ]}
             onPress={() => {
               playLeaderboardSound();
+              navigation.navigate('Ranking')
               // Keep your existing navigation or logic here if needed
             }}
           >

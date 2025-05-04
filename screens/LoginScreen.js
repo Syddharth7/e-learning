@@ -11,11 +11,14 @@ import character from '../assets/3d characters.png';
 // Get device dimensions
 const { width, height } = Dimensions.get('window');
 
+// Create global audio references to track if sounds are already playing
+let globalBackgroundSound = null;
+let initialSoundPlayed = false;
+
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [backgroundSound, setBackgroundSound] = useState(null);
-  const [buttonSound, setButtonSound] = useState(null);
   const characterAnim = useRef(new Animated.Value(0)).current;
   
   // State to track screen dimensions when they change
@@ -66,29 +69,38 @@ export default function LoginScreen({ navigation }) {
     floatAnimation();
   }, []);
 
+  // Sound management
   useEffect(() => {
-    let loginSound, bgSound;
+    let loginSound;
 
     const playSounds = async () => {
       try {
-        // Load the login sound
-        loginSound = new Audio.Sound();
-        await loginSound.loadAsync(require('../assets/sounds/login_sound2.mp3'));
-        await loginSound.playAsync();
+        // Only play the initial login sound if it hasn't been played before
+        if (!initialSoundPlayed) {
+          // Load the login sound
+          loginSound = new Audio.Sound();
+          await loginSound.loadAsync(require('../assets/sounds/login_sound2.mp3'));
+          await loginSound.playAsync();
+          initialSoundPlayed = true;
 
-        // Listen for when the login sound finishes
-        loginSound.setOnPlaybackStatusUpdate(async (status) => {
-          if (status.didJustFinish) {
-            await loginSound.unloadAsync();
+          // Listen for when the login sound finishes
+          loginSound.setOnPlaybackStatusUpdate(async (status) => {
+            if (status.didJustFinish) {
+              await loginSound.unloadAsync();
 
-            // Background music setup
-            bgSound = new Audio.Sound();
-            await bgSound.loadAsync(require('../assets/sounds/bgSoundd.mp3'), { isLooping: true });
-            await bgSound.playAsync();
-
-            setBackgroundSound(bgSound);
-          }
-        });
+              // Only set up background music if it's not already playing
+              if (!globalBackgroundSound) {
+                // Background music setup
+                const bgSound = new Audio.Sound();
+                await bgSound.loadAsync(require('../assets/sounds/bgSoundd.mp3'), { isLooping: true });
+                await bgSound.playAsync();
+                
+                globalBackgroundSound = bgSound;
+                setBackgroundSound(bgSound);
+              }
+            }
+          });
+        }
       } catch (error) {
         console.error('Error playing sounds:', error);
       }
@@ -96,9 +108,10 @@ export default function LoginScreen({ navigation }) {
 
     playSounds();
 
+    // Clean up function - only unload sounds in specific cases
     return () => {
       if (loginSound) loginSound.unloadAsync();
-      if (bgSound) bgSound.unloadAsync();
+      // We don't unload the background sound here as we want it to continue
     };
   }, []);
 

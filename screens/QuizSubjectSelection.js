@@ -39,15 +39,8 @@ export default function QuizSubjectSelection({ subjects, progress, points, navig
     return prevLessonsCompleted === 5;
   };
 
-  const getSubjectProgress = (subjectId) => {
-    const subjectProgress = progress.filter(p => p.subject_id === subjectId && p.is_completed);
-    return Math.min(Math.round((subjectProgress.length / 5) * 100), 100);
-  };
-
   const renderSubjectItem = ({ item, index }) => {
     const isUnlocked = isSubjectUnlocked(item.order_num);
-    const progressPercentage = getSubjectProgress(item.id);
-    const subjectProgress = progress.filter(p => p.subject_id === item.id && p.is_completed).length;
     const colors = ['#4b86f0', '#ff6f9c', '#ffb347', '#83c5be', '#d62828'];
     const color = colors[index % colors.length];
     
@@ -64,11 +57,8 @@ export default function QuizSubjectSelection({ subjects, progress, points, navig
           
           <View style={styles.subjectInfo}>
             <Text style={styles.subjectName}>{item.name}</Text>
-            <View style={styles.progressBarContainer}>
-              <View style={[styles.progressBarFill, { width: `${progressPercentage}%`, backgroundColor: color }]} />
-            </View>
             <Text style={styles.progressText}>
-              {isUnlocked ? `${subjectProgress}/5 completed` : 'Complete previous subject to unlock'}
+              {isUnlocked ? 'Unlocked' : 'Complete previous subject to unlock'}
             </Text>
           </View>
           

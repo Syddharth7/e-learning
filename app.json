@@ -4,11 +4,11 @@
     "slug": "brainboost_app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon1.png",
+    "icon": "./assets/BBlogo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/icon1.png",
+      "image": "./assets/BBlogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -18,7 +18,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon1.png",
+        "foregroundImage": "./assets/BBlogo.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.syddharth.brainboost_app"

@@ -401,6 +401,89 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
+  // Add these to your styles file
+modalOverlay: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 1000,
+},
+scorePopupCard: {
+  backgroundColor: 'white',
+  borderRadius: 20,
+  padding: 24,
+  margin: 20,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 10 },
+  shadowOpacity: 0.25,
+  shadowRadius: 20,
+  elevation: 10,
+},
+scoreTitle: {
+  fontSize: 24,
+  fontWeight: 'bold',
+  textAlign: 'center',
+  marginBottom: 8,
+},
+scoreSubtitle: {
+  fontSize: 16,
+  textAlign: 'center',
+  color: '#666',
+  marginBottom: 24,
+},
+scoreStatsContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-around',
+  alignItems: 'center',
+  marginBottom: 24,
+},
+scoreStatItem: {
+  alignItems: 'center',
+},
+scoreStatNumber: {
+  fontSize: 28,
+  fontWeight: 'bold',
+  marginBottom: 4,
+},
+scoreStatLabel: {
+  fontSize: 12,
+  color: '#666',
+  textAlign: 'center',
+},
+scoreStatDivider: {
+  width: 1,
+  height: 40,
+  backgroundColor: '#E0E0E0',
+},
+scoreProgressContainer: {
+  marginBottom: 24,
+},
+scoreProgressBar: {
+  height: 8,
+  backgroundColor: '#E0E0E0',
+  borderRadius: 4,
+  overflow: 'hidden',
+},
+scoreProgressFill: {
+  height: '100%',
+  borderRadius: 4,
+},
+scoreButton: {
+  padding: 16,
+  borderRadius: 12,
+  alignItems: 'center',
+},
+scoreButtonText: {
+  color: 'white',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
   container: { flex: 1, backgroundColor: '#f0f4f8' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f4f8' },
   loadingText: { fontFamily: 'DynaPuff', fontSize: 20, color: '#4b86f0' },

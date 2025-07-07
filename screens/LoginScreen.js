@@ -176,10 +176,10 @@ export default function LoginScreen({ navigation }) {
       </View>
 
       <View style={[styles.formContainer, { width: screenDimensions.width > 600 ? '70%' : '90%' }]}>
-        <Text style={[styles.label, { fontSize: isSmallScreen ? 14 : 16 }]}>Username:</Text>
+        <Text style={[styles.label, { fontSize: isSmallScreen ? 14 : 16 }]}>Email:</Text>
         <TextInput
           style={[styles.input, { fontSize: isSmallScreen ? 14 : 16, padding: isSmallScreen ? 8 : 12 }]}
-          placeholder="Enter Username"
+          placeholder="Enter Email"
           value={email}
           onChangeText={setEmail}
           placeholderTextColor="#8b9cb5"

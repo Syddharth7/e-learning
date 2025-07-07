@@ -10,9 +10,22 @@ import {
   ActivityIndicator,
   Dimensions,
   StatusBar,
+  Animated,
 } from 'react-native';
 import { supabase } from '../supabase';
-import { ArrowLeft, Settings, CircleCheck as CheckCircle, AlertTriangle, Star } from 'lucide-react-native';
+import { 
+  ArrowLeft, 
+  Settings, 
+  CircleCheck as CheckCircle, 
+  AlertTriangle,
+  Mic,
+  Star,
+  Trophy,
+  Clock,
+  BookOpen,
+  Award,
+  Zap
+} from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -22,9 +35,28 @@ export default function LessonDetailScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState(null);
+  const [isReading, setIsReading] = useState(false);
+  const [starAnimation] = useState(new Animated.Value(1));
 
   useEffect(() => {
     fetchLesson();
+    // Animate stars periodically
+    const starInterval = setInterval(() => {
+      Animated.sequence([
+        Animated.timing(starAnimation, {
+          toValue: 1.2,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(starAnimation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, 3000);
+
+    return () => clearInterval(starInterval);
   }, [lessonId, progress]);
 
   const fetchLesson = async () => {
@@ -57,24 +89,48 @@ export default function LessonDetailScreen({ route, navigation }) {
       }
       
       const userId = userData.user.id;
-      const { error } = await supabase.from('user_progress').upsert({
+      const { error: progressError } = await supabase.from('user_progress').upsert({
         user_id: userId,
         subject_id: subjectId,
         lesson_id: lessonId,
         is_completed: true,
       });
       
-      if (error) throw error;
+      if (progressError) throw progressError;
       
       setIsCompleted(true);
-      
-      // Show success message and navigate back
-      alert('Lesson completed successfully!');
-      navigation.goBack();
+
+      // Fetch the quiz associated with this lesson
+      const { data: quizData, error: quizError } = await supabase
+        .from('quizzes')
+        .select('*')
+        .eq('lesson_id', lessonId)
+        .single();
+
+      if (quizError || !quizData) {
+        console.warn('No quiz found for this lesson or error fetching quiz:', quizError?.message);
+        alert('Lesson completed! 🎉 You earned 50 XP! No quiz available for this lesson.');
+        navigation.goBack();
+        return;
+      }
+
+      // Navigate to QuizScreen with the quiz data
+      navigation.navigate('Quiz', {
+        mode: 'quizzes',
+        subjectId,
+        selectedQuiz: quizData,
+      });
+
     } catch (error) {
       console.error('Error completing lesson:', error);
       alert('Unable to complete lesson: ' + error.message);
     }
+  };
+
+  const handleReadLesson = () => {
+    setIsReading(!isReading);
+    // Here you would integrate with text-to-speech functionality
+    // For now, we'll just toggle the state for visual feedback
   };
 
   if (loading) {
@@ -87,7 +143,7 @@ export default function LessonDetailScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="light-content" backgroundColor="#1E293B" />
       
       <Header navigation={navigation} />
 
@@ -96,17 +152,24 @@ export default function LessonDetailScreen({ route, navigation }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <HeroSection title={lesson.title} isCompleted={isCompleted} />
-
+        <BlackboardHeroSection title={lesson.title} isCompleted={isCompleted} starAnimation={starAnimation} />
+        
+        <ProgressIndicator />
+        
         <EnhancedLessonContent content={lesson.content} />
       </ScrollView>
 
-      <Footer isCompleted={isCompleted} onComplete={completeLesson} />
+      <Footer 
+        isCompleted={isCompleted} 
+        onComplete={completeLesson} 
+        onReadLesson={handleReadLesson}
+        isReading={isReading}
+      />
     </SafeAreaView>
   );
 }
 
-// Component for the header section
+// Enhanced Header with gamification elements
 const Header = ({ navigation }) => (
   <View style={styles.header}>
     <TouchableOpacity
@@ -114,39 +177,85 @@ const Header = ({ navigation }) => (
       onPress={() => navigation.goBack()}
       accessibilityLabel="Go back"
     >
-      <ArrowLeft size={22} color="#4F46E5" />
+      <ArrowLeft size={22} color="#FFFFFF" />
     </TouchableOpacity>
     
-    <Image
-      source={require('../assets/logo.png')}
-      style={styles.logo}
-      resizeMode="contain"
-      accessibilityLabel="App logo"
-    />
+    <View style={styles.headerCenter}>
+      <Image
+        source={require('../assets/logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+        accessibilityLabel="App logo"
+      />
+      <View style={styles.xpContainer}>
+        <Star size={16} color="#FFD700" />
+      </View>
+    </View>
     
     <TouchableOpacity 
       style={styles.iconButton}
       accessibilityLabel="Settings"
     >
-      <Settings size={22} color="#4F46E5" />
+      <Settings size={22} color="#FFFFFF" />
     </TouchableOpacity>
   </View>
 );
 
-// Component for the hero section with title
-const HeroSection = ({ title, isCompleted }) => (
-  <View style={styles.heroSection}>
-    {isCompleted && (
-      <View style={styles.completedBadge}>
-        <CheckCircle size={16} color="#047857" />
-        <Text style={styles.completedText}>Completed</Text>
-      </View>
-    )}
-    <Text style={styles.lessonTitle}>{title}</Text>
+// Blackboard-style hero section
+const BlackboardHeroSection = ({ title, isCompleted, starAnimation }) => (
+  <View style={styles.blackboardContainer}>
+    {/* Decorative elements */}
+    <View style={styles.decorativeElements}>
+      <Animated.View style={[styles.starDecoration, { transform: [{ scale: starAnimation }] }]}>
+        <Star size={20} color="#FFD700" fill="#FFD700" />
+      </Animated.View>
+      <Animated.View style={[styles.starDecoration, styles.starRight, { transform: [{ scale: starAnimation }] }]}>
+        <Star size={16} color="#FFD700" fill="#FFD700" />
+      </Animated.View>
+    </View>
+    
+    <View style={styles.blackboard}>
+      {/* Chalk dust effect */}
+      <View style={styles.chalkDustTop} />
+      <View style={styles.chalkDustBottom} />
+      
+      {/* Title with chalk effect */}
+      <Text style={styles.chalkTitle}>{title}</Text>
+      
+      {/* Completion badge */}
+      {isCompleted && (
+        <View style={styles.completedBadgeBlackboard}>
+          <Trophy size={18} color="#FFD700" />
+          <Text style={styles.completedTextBlackboard}>MASTERED!</Text>
+        </View>
+      )}
+      
+      {/* Decorative underline */}
+      <View style={styles.chalkUnderline} />
+    </View>
   </View>
 );
 
-// Enhanced component for the lesson content with better formatting and highlighting
+// Progress indicator with gamification
+const ProgressIndicator = () => (
+  <View style={styles.progressContainer}>
+    <View style={styles.statsRow}>
+      <View style={styles.statItem}>
+        <Clock size={16} color="#6366F1" />
+        <Text style={styles.statText}>15 min read</Text>
+      </View>
+      <View style={styles.statItem}>
+        <BookOpen size={16} color="#10B981" />
+        <Text style={styles.statText}>Beginner</Text>
+      </View>
+      <View style={styles.statItem}>
+        <Award size={16} color="#F59E0B" />
+      </View>
+    </View>
+  </View>
+);
+
+// Enhanced lesson content with better formatting
 const EnhancedLessonContent = ({ content }) => {
   // Process content to identify sections and important parts
   const processContent = (rawContent) => {
@@ -248,13 +357,10 @@ const EnhancedLessonContent = ({ content }) => {
       let inListSection = false;
       
       lines.forEach((line, index) => {
-        // Check if this is a bullet point (can be expanded for other formats)
         const isBulletPoint = /^•\s/.test(line) || line.trim().startsWith('-');
         
-        // Process bullet points
         if (isBulletPoint) {
           if (!inListSection) {
-            // Add any accumulated paragraph content first
             if (currentParagraph.length > 0) {
               paragraphs.push({
                 type: 'paragraph',
@@ -268,30 +374,24 @@ const EnhancedLessonContent = ({ content }) => {
               items: [line.replace(/^•\s|-\s/, '').trim()]
             });
           } else {
-            // Add to the current list
             const lastParagraph = paragraphs[paragraphs.length - 1];
             lastParagraph.items.push(line.replace(/^•\s|-\s/, '').trim());
           }
         } else {
-          // Not a bullet point
           inListSection = false;
           
-          // If blank line and we have content, create a new paragraph
           if (line.trim() === '' && currentParagraph.length > 0) {
             paragraphs.push({
               type: 'paragraph',
               content: currentParagraph.join(' ')
             });
             currentParagraph = [];
-          } 
-          // Add content to current paragraph if it's not empty
-          else if (line.trim() !== '') {
+          } else if (line.trim() !== '') {
             currentParagraph.push(line);
           }
         }
       });
       
-      // Add any remaining paragraph content
       if (currentParagraph.length > 0) {
         paragraphs.push({
           type: 'paragraph',
@@ -306,9 +406,7 @@ const EnhancedLessonContent = ({ content }) => {
     });
   };
   
-  // For lesson 1, use the original career path processing logic
   const processCareerPaths = (rawContent) => {
-    // Special keywords for career paths - exact phrases to look for
     const keyCareerPaths = [
       "Web and game developer",
       "Visual Arts Animator/Illustrator",
@@ -318,16 +416,12 @@ const EnhancedLessonContent = ({ content }) => {
       "Telecommunication"
     ];
     
-    // Split by lines first to identify sections
     const lines = rawContent.split('\n');
-    
-    // First pass: identify career path boundaries
     let careerPathSegments = [];
     let currentSegment = [];
     let currentCareerPath = null;
     
     lines.forEach((line, index) => {
-      // Check if this line starts a new career path
       let foundCareerPath = null;
       for (const path of keyCareerPaths) {
         if (line.includes(path)) {
@@ -337,7 +431,6 @@ const EnhancedLessonContent = ({ content }) => {
       }
       
       if (foundCareerPath) {
-        // If we already have content in the current segment, save it
         if (currentSegment.length > 0) {
           careerPathSegments.push({
             careerPath: currentCareerPath,
@@ -345,16 +438,13 @@ const EnhancedLessonContent = ({ content }) => {
           });
         }
         
-        // Start a new segment with this career path
         currentCareerPath = foundCareerPath;
         currentSegment = [line];
       } else if (currentSegment.length > 0 || line.trim() !== '') {
-        // Add line to current segment if not empty
         currentSegment.push(line);
       }
     });
     
-    // Add the last segment if not empty
     if (currentSegment.length > 0) {
       careerPathSegments.push({
         careerPath: currentCareerPath,
@@ -362,7 +452,6 @@ const EnhancedLessonContent = ({ content }) => {
       });
     }
     
-    // Second pass: Process each segment to identify sub-sections and formatting
     const processedSegments = careerPathSegments.map(segment => {
       const lines = segment.lines;
       const sections = [];
@@ -370,13 +459,10 @@ const EnhancedLessonContent = ({ content }) => {
       let inListSection = false;
       
       lines.forEach((line, index) => {
-        // Check if this is a bullet point
         const isBulletPoint = /^•\s/.test(line);
         
-        // Process bullet points
         if (isBulletPoint) {
           if (!inListSection) {
-            // Add any accumulated paragraph content first
             if (currentSection.length > 0) {
               sections.push({
                 type: 'paragraph',
@@ -390,30 +476,24 @@ const EnhancedLessonContent = ({ content }) => {
               items: [line.replace('•\t', '').replace('•', '').trim()]
             });
           } else {
-            // Add to the current list
             const lastSection = sections[sections.length - 1];
             lastSection.items.push(line.replace('•\t', '').replace('•', '').trim());
           }
         } else {
-          // Not a bullet point
           inListSection = false;
           
-          // If blank line and we have content, create a new paragraph
           if (line.trim() === '' && currentSection.length > 0) {
             sections.push({
               type: 'paragraph',
               content: currentSection.join(' ')
             });
             currentSection = [];
-          } 
-          // Add content to current section if it's not empty
-          else if (line.trim() !== '') {
+          } else if (line.trim() !== '') {
             currentSection.push(line);
           }
         }
       });
       
-      // Add any remaining content
       if (currentSection.length > 0) {
         sections.push({
           type: 'paragraph',
@@ -430,36 +510,30 @@ const EnhancedLessonContent = ({ content }) => {
     return processedSegments;
   };
   
-  // Check if this is the ICT trends lesson by looking for specific keywords
   const isICTTrendsLesson = content.includes("ICT trends") && 
                             content.includes("Superapps") && 
                             content.includes("metaverse");
   
-  // Use the appropriate content processing method based on lesson content
   const contentToRender = isICTTrendsLesson ? 
     processContent(content) : 
     processCareerPaths(content);
   
-  // Render the content based on which lesson it is
   if (isICTTrendsLesson) {
-    // Render ICT trends lesson (Lesson 2)
     return (
       <View style={styles.contentContainer}>
         {contentToRender.map((section, sectionIndex) => (
           <View key={`section-${sectionIndex}`} style={styles.sectionContainer}>
-            {/* Only show divider after the first section */}
-            {sectionIndex > 0 && (
-              <View style={styles.sectionDivider} />
-            )}
+            {sectionIndex > 0 && <View style={styles.sectionDivider} />}
             
-            {/* Section title if it's not the introduction */}
             {section.title !== "Introduction" && (
-              <Text style={section.type === 'trend' ? styles.trendTitle : styles.sectionTitle}>
-                {section.title}
-              </Text>
+              <View style={styles.sectionHeader}>
+                <Zap size={20} color={section.type === 'trend' ? '#10B981' : '#6366F1'} />
+                <Text style={section.type === 'trend' ? styles.trendTitle : styles.sectionTitle}>
+                  {section.title}
+                </Text>
+              </View>
             )}
             
-            {/* Section content */}
             <View style={[
               section.type === 'trend' ? styles.trendSection : styles.contentSection,
               section.title.includes("Issues in Information") ? styles.issuesSection : null
@@ -482,7 +556,9 @@ const EnhancedLessonContent = ({ content }) => {
                     >
                       {paragraph.items.map((item, itemIndex) => (
                         <View key={itemIndex} style={styles.listItemContainer}>
-                          <Text style={styles.listBullet}>•</Text>
+                          <View style={styles.bulletPoint}>
+                            <Text style={styles.listBullet}>•</Text>
+                          </View>
                           <Text style={styles.listItemText}>{item}</Text>
                         </View>
                       ))}
@@ -497,25 +573,22 @@ const EnhancedLessonContent = ({ content }) => {
       </View>
     );
   } else {
-    // Render original career paths lesson (Lesson 1) using original rendering logic
     return (
       <View style={styles.contentContainer}>
         {contentToRender.map((segment, segmentIndex) => (
           <View key={`segment-${segmentIndex}`}>
-            {/* Only show divider after the first segment */}
-            {segmentIndex > 0 && (
-              <View style={styles.careerPathDivider} />
-            )}
+            {segmentIndex > 0 && <View style={styles.careerPathDivider} />}
             
             <View style={styles.careerPathSection}>
-              {/* First line typically contains the career path title */}
               {segment.careerPath && (
-                <Text style={styles.careerPathTitle}>
-                  {segment.careerPath}
-                </Text>
+                <View style={styles.careerPathHeader}>
+                  <Award size={20} color="#065F46" />
+                  <Text style={styles.careerPathTitle}>
+                    {segment.careerPath}
+                  </Text>
+                </View>
               )}
               
-              {/* Render the sections of this career path */}
               {segment.sections.map((section, sectionIndex) => {
                 if (section.type === 'paragraph') {
                   return (
@@ -534,7 +607,9 @@ const EnhancedLessonContent = ({ content }) => {
                     >
                       {section.items.map((item, itemIndex) => (
                         <View key={itemIndex} style={styles.listItemContainer}>
-                          <Text style={styles.listBullet}>•</Text>
+                          <View style={styles.bulletPoint}>
+                            <Text style={styles.listBullet}>•</Text>
+                          </View>
                           <Text style={styles.listItemText}>{item}</Text>
                         </View>
                       ))}
@@ -551,11 +626,14 @@ const EnhancedLessonContent = ({ content }) => {
   }
 };
 
-// Loading state component
+// Loading state component with gamification
 const LoadingState = () => (
   <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color="#4F46E5" />
-    <Text style={styles.loadingText}>Loading lesson...</Text>
+    <View style={styles.loadingSpinner}>
+      <ActivityIndicator size="large" color="#6366F1" />
+      <Star size={24} color="#FFD700" style={styles.loadingStar} />
+    </View>
+    <Text style={styles.loadingText}>Loading your adventure...</Text>
   </View>
 );
 
@@ -583,45 +661,73 @@ const ErrorState = ({ message, onRetry, onGoBack }) => (
   </View>
 );
 
-// Component for the footer with complete button
-const Footer = ({ isCompleted, onComplete }) => (
+// Enhanced footer with read lesson button
+const Footer = ({ isCompleted, onComplete, onReadLesson, isReading }) => (
   <View style={styles.footer}>
-    <TouchableOpacity
-      style={[
-        styles.completeButton,
-        isCompleted && styles.completedButton
-      ]}
-      onPress={onComplete}
-      disabled={isCompleted}
-      activeOpacity={0.8}
-      accessibilityLabel={isCompleted ? "Lesson already completed" : "Mark lesson as complete"}
-      accessibilityState={{ disabled: isCompleted }}
-    >
-      <Text style={styles.completeButtonText}>
-        {isCompleted ? 'Lesson Completed' : 'Complete Lesson'}
-      </Text>
-      {isCompleted && <CheckCircle size={20} color="#FFF" style={styles.checkIcon} />}
-    </TouchableOpacity>
+    <View style={styles.footerButtons}>
+      <TouchableOpacity
+        style={[styles.readButton, isReading && styles.readButtonActive]}
+        onPress={onReadLesson}
+        activeOpacity={0.8}
+        accessibilityLabel={isReading ? "Stop reading lesson" : "Read lesson aloud"}
+      >
+        <Mic size={20} color={isReading ? "#FFFFFF" : "#6366F1"} />
+        <Text style={[styles.readButtonText, isReading && styles.readButtonTextActive]}>
+          {isReading ? 'Stop Reading' : 'Read Lesson'}
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={[
+          styles.completeButton,
+          isCompleted && styles.completedButton
+        ]}
+        onPress={onComplete}
+        disabled={isCompleted}
+        activeOpacity={0.8}
+        accessibilityLabel={isCompleted ? "Lesson already completed" : "Mark lesson as complete and proceed to quiz"}
+        accessibilityState={{ disabled: isCompleted }}
+      >
+        <Text style={styles.completeButtonText}>
+          {isCompleted ? 'Mastered!' : 'Complete Lesson'}
+        </Text>
+        {isCompleted ? (
+          <Trophy size={20} color="#FFF" style={styles.checkIcon} />
+        ) : (
+          <CheckCircle size={20} color="#FFF" style={styles.checkIcon} />
+        )}
+      </TouchableOpacity>
+    </View>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#0F172A',
   },
   // Loading state styles
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#0F172A',
     padding: 24,
   },
+  loadingSpinner: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingStar: {
+    position: 'absolute',
+    top: -12,
+    right: -12,
+  },
   loadingText: {
-    marginTop: 16,
+    marginTop: 24,
     fontSize: 16,
-    color: '#6B7280',
+    color: '#94A3B8',
     fontWeight: '500',
   },
   // Error state styles
@@ -629,7 +735,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#0F172A',
     padding: 24,
   },
   errorText: {
@@ -647,23 +753,23 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   errorButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#6366F1',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
     minWidth: 120,
     alignItems: 'center',
     elevation: 2,
-    shadowColor: '#4F46E5',
+    shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3,
   },
   retryButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#475569',
   },
   retryButtonText: {
-    color: '#4B5563',
+    color: '#F1F5F9',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -679,21 +785,162 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 18,
     paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1E293B',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#334155',
+  },
+  headerCenter: {
+    alignItems: 'center',
   },
   iconButton: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#334155',
     justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {
-    height: 32,
-    width: 100,
+    height: 28,
+    width: 80,
+    tintColor: '#FFFFFF',
+  },
+  xpContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  xpText: {
+    color: '#FFD700',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  // Blackboard styles
+  blackboardContainer: {
+    margin: 16,
+    marginBottom: 8,
+    position: 'relative',
+  },
+  decorativeElements: {
+    position: 'absolute',
+    top: -10,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  starDecoration: {
+    position: 'absolute',
+    top: 0,
+    left: 20,
+  },
+  starRight: {
+    left: 'auto',
+    right: 20,
+  },
+  blackboard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
+    padding: 24,
+    paddingTop: 32,
+    borderWidth: 4,
+    borderColor: '#8B5A3C',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  chalkDustTop: {
+    position: 'absolute',
+    top: 8,
+    left: 16,
+    right: 16,
+    height: 2,
+    backgroundColor: '#64748B',
+    opacity: 0.3,
+    borderRadius: 1,
+  },
+  chalkDustBottom: {
+    position: 'absolute',
+    bottom: 16,
+    left: 24,
+    width: 60,
+    height: 1,
+    backgroundColor: '#64748B',
+    opacity: 0.4,
+    borderRadius: 1,
+  },
+  chalkTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#F1F5F9',
+    textAlign: 'center',
+    lineHeight: 32,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  chalkUnderline: {
+    height: 2,
+    backgroundColor: '#F1F5F9',
+    marginTop: 12,
+    marginHorizontal: 20,
+    opacity: 0.7,
+    borderRadius: 1,
+  },
+  completedBadgeBlackboard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#065F46',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginTop: 16,
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  completedTextBlackboard: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '700',
+    marginLeft: 8,
+    letterSpacing: 1,
+  },
+  // Progress indicator styles
+  progressContainer: {
+    margin: 16,
+    marginTop: 8,
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#334155',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  statText: {
+    color: '#F1F5F9',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   // Scroll container styles
   scrollContainer: {
@@ -702,146 +949,177 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 32,
   },
-  // Hero section styles
-  heroSection: {
-    padding: 24,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  lessonTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
-    lineHeight: 36,
-  },
-  completedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 16,
-  },
-  completedText: {
-    color: '#047857',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
   // Content styles
   contentContainer: {
+    margin: 16,
+    backgroundColor: '#1E293B',
+    borderRadius: 16,
     padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#334155',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  content: {
+  sectionContainer: {
+    marginBottom: 20,
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#475569',
+    marginVertical: 20,
+    opacity: 0.5,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#F1F5F9',
+    marginLeft: 8,
+    lineHeight: 24,
+  },
+  trendTitle: {
     fontSize: 16,
-    lineHeight: 26,
-    color: '#374151',
-    letterSpacing: 0.2,
+    fontWeight: '700',
+    color: '#10B981',
+    marginLeft: 8,
+    lineHeight: 24,
   },
-  contentParagraph: {
-    marginBottom: 16,
+  contentSection: {
+    backgroundColor: '#334155',
+    borderRadius: 12,
+    padding: 16,
   },
-  // Strong divider between career paths
-  careerPathDivider: {
-    height: 2,
-    backgroundColor: '#D1D5DB',
-    marginVertical: 24,
-    borderRadius: 1,
-  },
-  // Container for each career path
-  careerPathSection: {
-    backgroundColor: '#F0FDF4',
+  trendSection: {
+    backgroundColor: '#065F46',
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
     borderLeftColor: '#10B981',
   },
-  // Title style for career paths
-  careerPathTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#065F46',
-    marginBottom: 12,
+  issuesSection: {
+    backgroundColor: '#7F1D1D',
+    borderLeftColor: '#EF4444',
+  },
+  content: {
+    fontSize: 15,
     lineHeight: 24,
+    color: '#E2E8F0',
+    letterSpacing: 0.2,
   },
-  importantSection: {
-    backgroundColor: '#F0F9FF',
-    padding: 14,
+  contentParagraph: {
+    marginBottom: 16,
+  },
+  // Career path styles
+  careerPathDivider: {
+    height: 2,
+    backgroundColor: '#475569',
+    marginVertical: 24,
+    borderRadius: 1,
+  },
+  careerPathSection: {
+    backgroundColor: '#065F46',
     borderRadius: 12,
+    padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#3B82F6',
-    marginBottom: 20,
+    borderLeftColor: '#10B981',
+    marginBottom: 16,
   },
-  importantContent: {
-    fontWeight: '600',
-    color: '#1E40AF',
+  careerPathHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  starIcon: {
-    marginRight: 6,
-  },
-  sectionSpacer: {
-    height: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    marginBottom: 20,
+  careerPathTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#10B981',
+    marginLeft: 8,
+    lineHeight: 24,
   },
   // List styles
   listContainer: {
-    marginBottom: 16,
+    marginVertical: 8,
   },
   listItemContainer: {
     flexDirection: 'row',
     marginBottom: 8,
     alignItems: 'flex-start',
   },
+  bulletPoint: {
+    width: 20,
+    alignItems: 'center',
+    marginTop: 2,
+  },
   listBullet: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#10B981',
-    marginRight: 8,
-    lineHeight: 26,
+    fontWeight: 'bold',
   },
   listItemText: {
     flex: 1,
-    fontSize: 16,
-    lineHeight: 26,
-    color: '#374151',
+    fontSize: 15,
+    lineHeight: 24,
+    color: '#E2E8F0',
     letterSpacing: 0.2,
   },
   // Footer styles
   footer: {
-    padding: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1E293B',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: '#334155',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  footerButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  readButton: {
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    borderWidth: 2,
+    borderColor: '#6366F1',
+  },
+  readButtonActive: {
+    backgroundColor: '#6366F1',
+    borderColor: '#6366F1',
+  },
+  readButtonText: {
+    color: '#6366F1',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  readButtonTextActive: {
+    color: '#FFFFFF',
   },
   completeButton: {
-    backgroundColor: '#4F46E5',
-    paddingVertical: 16,
-    borderRadius: 14,
+    backgroundColor: '#6366F1',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#4F46E5',
+    flex: 2,
+    elevation: 3,
+    shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 3,
+    shadowRadius: 4,
   },
   completedButton: {
     backgroundColor: '#059669',
@@ -853,76 +1131,5 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     marginLeft: 8,
-  },
-  // New styles for enhanced content separation
-  sectionContainer: {
-    marginBottom: 12,
-  },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 20,
-  },
-  contentSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 12,
-    lineHeight: 28,
-  },
-  trendSection: {
-    backgroundColor: '#F0FDF4', // Light green background
-    borderRadius: 12,
-    padding: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
-    marginBottom: 16,
-  },
-  issuesSection: {
-    backgroundColor: '#FEF2F2', // Light red background for issues
-    borderLeftColor: '#EF4444',
-  },
-  trendTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#065F46', // Dark green
-    marginBottom: 10,
-    lineHeight: 24,
-  },
-  // Old spacer - keep for compatibility
-  sectionSpacer: {
-    height: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    marginBottom: 20,
-  },
-  // New spacer specifically for career paths
-  careerPathSpacer: {
-    height: 40,
-    borderBottomWidth: 1,
-    borderBottomColor: '#D1D5DB',
-    marginBottom: 20,
-  },
-  // New style for career path sections
-  careerPathSection: {
-    backgroundColor: '#F0FDF4',
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  // New style for career path titles
-  careerPathTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#065F46',
-    lineHeight: 28,
   },
 });

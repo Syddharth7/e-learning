@@ -4,6 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { styles } from './styles';
 
 export default function QuizList({ quizzes, lessons, progress, navigation, onSelectQuiz, onBack }) {
+  // Function to determine quarter based on lesson order
+  const getQuarter = (orderNum) => {
+    if (orderNum === 1) return "Quarter 1";
+    if (orderNum === 2) return "Quarter 2";
+    if (orderNum === 3) return "Quarter 3";
+    if (orderNum === 4) return "Quarter 3.5";
+    if (orderNum >= 5) return "Quarter 4";
+    return "Quarter 1"; // default fallback
+  };
+
   const isQuizUnlocked = (quiz) => {
     const lesson = lessons.find(l => l.id === quiz.lesson_id);
     return lesson && isLessonUnlocked(lesson.order_num) && progress.some(p => p.lesson_id === lesson.id && p.is_completed);
@@ -15,28 +25,34 @@ export default function QuizList({ quizzes, lessons, progress, navigation, onSel
     return prevLesson && progress.some(p => p.lesson_id === prevLesson.id && p.is_completed);
   };
 
-  const renderQuizItem = ({ item }) => (
-    <View style={styles.quizItemContainer}>
-      <View style={styles.item}>
-        <Text style={styles.itemText}>{item.title}</Text>
-      </View>
-      <TouchableOpacity
-        style={[
-          styles.enhancedQuizButton,
-          !isQuizUnlocked(item) && styles.enhancedQuizButtonDisabled
-        ]}
-        onPress={() => isQuizUnlocked(item) && onSelectQuiz(item)}
-        disabled={!isQuizUnlocked(item)}
-      >
-        <View style={styles.buttonInnerShadow}>
-          <Text style={styles.enhancedQuizButtonText}>
-            {isQuizUnlocked(item) ? 'Take Quiz' : 'Locked'}
-          </Text>
-          {isQuizUnlocked(item) && <Ionicons name="arrow-forward" size={20} color="white" style={{marginLeft: 8}} />}
+  const renderQuizItem = ({ item }) => {
+    // Find the lesson associated with this quiz to get the quarter info
+    const associatedLesson = lessons.find(l => l.id === item.lesson_id);
+    const quarterInfo = associatedLesson ? getQuarter(associatedLesson.order_num) : "Quarter 1";
+    
+    return (
+      <View style={styles.quizItemContainer}>
+        <View style={styles.item}>
+          <Text style={styles.itemText}>{`${quarterInfo}: ${item.title}`}</Text>
         </View>
-      </TouchableOpacity>
-    </View>
-  );
+        <TouchableOpacity
+          style={[
+            styles.enhancedQuizButton,
+            !isQuizUnlocked(item) && styles.enhancedQuizButtonDisabled
+          ]}
+          onPress={() => isQuizUnlocked(item) && onSelectQuiz(item)}
+          disabled={!isQuizUnlocked(item)}
+        >
+          <View style={styles.buttonInnerShadow}>
+            <Text style={styles.enhancedQuizButtonText}>
+              {isQuizUnlocked(item) ? 'Take Quiz' : 'Locked'}
+            </Text>
+            {isQuizUnlocked(item) && <Ionicons name="arrow-forward" size={20} color="white" style={{marginLeft: 8}} />}
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>

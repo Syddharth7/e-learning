@@ -21,8 +21,8 @@ export default function App() {
         <Stack.Screen name="Subjects" component={SubjectScreen} options={{ headerShown: false }}/>
         <Stack.Screen name="Quiz" component={QuizScreen} options={{ headerShown: false }}/>
         <Stack.Screen name="LessonDetail" component={LessonDetail} options={{ headerShown: false }}/>
-        <Stack.Screen name="LessonListScreen" component={LessonListScreen} />
-        <Stack.Screen name="Ranking" component={RankingScreen} />
+        <Stack.Screen name="LessonListScreen" component={LessonListScreen} options={{ headerShown: false }}/>
+        <Stack.Screen name="Ranking" component={RankingScreen} options={{ headerShown: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

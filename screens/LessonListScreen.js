@@ -17,6 +17,16 @@ export default function LessonListScreen({ route, navigation }) {
     'DynaPuff-Bold': require('../assets/fonts/Dynapuff.ttf'),
   });
 
+  // Function to determine quarter based on lesson order
+  const getQuarter = (orderNum) => {
+    if (orderNum === 1) return "Quarter 1";
+    if (orderNum === 2) return "Quarter 2";
+    if (orderNum === 3) return "Quarter 3";
+    if (orderNum === 4) return "Quarter 3.5";
+    if (orderNum >= 5) return "Quarter 4";
+    return "Quarter 1"; // default fallback
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -57,7 +67,7 @@ export default function LessonListScreen({ route, navigation }) {
 
   const renderLessonItem = ({ item }) => (
     <CustomButton
-      title={`Lesson ${item.order_num}`}
+      title={`${getQuarter(item.order_num)}: Lesson ${item.order_num}`}
       onPress={() => isLessonUnlocked(item.order_num) && navigation.navigate('LessonDetail', { lessonId: item.id, subjectId, progress })}
       disabled={!isLessonUnlocked(item.order_num)}
     />

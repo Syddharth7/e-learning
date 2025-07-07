@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, SafeAreaView, Dimensio
 import { useFonts } from 'expo-font';
 import { Audio } from 'expo-av'; // Import Audio from expo-av
 import logo from '../assets/logo.png';
-import character from '../assets/characters.png';
+import character from '../assets/3d characters.png';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ChoiceScreen({ navigation }) {
@@ -13,7 +13,11 @@ export default function ChoiceScreen({ navigation }) {
   
   // Animation values
   const characterYPosition = useRef(new Animated.Value(0)).current;
-  const startTextPosition = useRef(new Animated.Value(-width)).current; // Changed to start from left (-width)
+  const startTextPosition = useRef(new Animated.Value(-width)).current;
+  
+  // Decorative icons animation values
+  const decorativeIconsOpacity = useRef(new Animated.Value(0)).current;
+  const decorativeIconsScale = useRef(new Animated.Value(0.5)).current;
   
   // Sound references
   const [lessonsSound, setLessonsSound] = React.useState();
@@ -126,6 +130,22 @@ export default function ChoiceScreen({ navigation }) {
       duration: 800,
       useNativeDriver: true,
     }).start();
+    
+    // Decorative icons fade-in and scale animation
+    Animated.parallel([
+      Animated.timing(decorativeIconsOpacity, {
+        toValue: 1,
+        duration: 1200,
+        delay: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(decorativeIconsScale, {
+        toValue: 1,
+        duration: 1200,
+        delay: 600,
+        useNativeDriver: true,
+      })
+    ]).start();
   }, []);
   
   // Determine if we're on a small screen
@@ -141,6 +161,7 @@ export default function ChoiceScreen({ navigation }) {
   const fontSize = isSmallScreen ? 30 : 35;
   const buttonFontSize = isSmallScreen ? 16 : 18;
   const iconSize = isSmallScreen ? 20 : 24;
+  const decorativeIconSize = isSmallScreen ? 16 : 20;
   
   // Load the DynaPuff font - make sure the font name matches exactly
   const [fontsLoaded] = useFonts({
@@ -151,6 +172,21 @@ export default function ChoiceScreen({ navigation }) {
   if (!fontsLoaded) {
     return null;
   }
+
+  // Decorative Icon Component
+  const DecorativeIcon = ({ name, style, color = '#E0E0E0' }) => (
+    <Animated.View
+      style={[
+        style,
+        {
+          opacity: decorativeIconsOpacity,
+          transform: [{ scale: decorativeIconsScale }]
+        }
+      ]}
+    >
+      <Ionicons name={name} size={decorativeIconSize} color={color} />
+    </Animated.View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -209,68 +245,143 @@ export default function ChoiceScreen({ navigation }) {
           LET'S START!
         </Animated.Text>
         
-        {/* Menu Buttons */}
+        {/* Menu Buttons with Decorative Icons */}
         <View style={[styles.buttonContainer, { marginTop: isSmallScreen ? 5 : 10 }]}>
-          <TouchableOpacity 
-            style={[
-              styles.menuButton, 
-              styles.lessonsButton,
-              styles.buttonShadow,
-              { 
-                width: buttonWidth, 
-                height: buttonHeight,
-                marginBottom: isSmallScreen ? 10 : 15
-              }
-            ]}
-            onPress={() => {
-              playLessonsSound();
-              navigation.navigate('Subjects', { mode: 'subjects' });
-            }}
-          >
-            <Ionicons name="book" size={iconSize} color="white" />
-            <Text style={[styles.buttonText, { fontSize: buttonFontSize, fontFamily: 'DynaPuff' }]}>LESSONS</Text>
-          </TouchableOpacity>
+          {/* LESSONS Button with decorative icons */}
+          <View style={styles.buttonWrapper}>
+            {/* Decorative icons for Lessons */}
+            <DecorativeIcon 
+              name="book-outline" 
+              style={[styles.decorativeIcon, styles.topLeft]} 
+              color="#5091F2"
+            />
+            <DecorativeIcon 
+              name="library-outline" 
+              style={[styles.decorativeIcon, styles.topRight]} 
+              color="#5091F2"
+            />
+            <DecorativeIcon 
+              name="school-outline" 
+              style={[styles.decorativeIcon, styles.bottomLeft]} 
+              color="#5091F2"
+            />
+            <DecorativeIcon 
+              name="bulb-outline" 
+              style={[styles.decorativeIcon, styles.bottomRight]} 
+              color="#5091F2"
+            />
+            
+            <TouchableOpacity 
+              style={[
+                styles.menuButton, 
+                styles.lessonsButton,
+                styles.buttonShadow,
+                { 
+                  width: buttonWidth, 
+                  height: buttonHeight,
+                  marginBottom: isSmallScreen ? 10 : 15
+                }
+              ]}
+              onPress={() => {
+                playLessonsSound();
+                navigation.navigate('Subjects', { mode: 'subjects' });
+              }}
+            >
+              <Ionicons name="book" size={iconSize} color="white" />
+              <Text style={[styles.buttonText, { fontSize: buttonFontSize, fontFamily: 'DynaPuff' }]}>LESSONS</Text>
+            </TouchableOpacity>
+          </View>
           
-          <TouchableOpacity 
-            style={[
-              styles.menuButton, 
-              styles.quizButton,
-              styles.buttonShadow,
-              { 
-                width: buttonWidth, 
-                height: buttonHeight,
-                marginBottom: isSmallScreen ? 10 : 15
-              }
-            ]}
-            onPress={() => {
-              playQuizSound();
-              navigation.navigate('Quiz', { mode: 'quizzes' });
-            }}
-          >
-            <Ionicons name="list" size={iconSize} color="white" />
-            <Text style={[styles.buttonText, { fontSize: buttonFontSize, fontFamily: 'DynaPuff' }]}>QUIZ</Text>
-          </TouchableOpacity>
+          {/* QUIZ Button with decorative icons */}
+          <View style={styles.buttonWrapper}>
+            {/* Decorative icons for Quiz */}
+            <DecorativeIcon 
+              name="help-circle-outline" 
+              style={[styles.decorativeIcon, styles.topLeft]} 
+              color="#8FD49A"
+            />
+            <DecorativeIcon 
+              name="create-outline" 
+              style={[styles.decorativeIcon, styles.topRight]} 
+              color="#8FD49A"
+            />
+            <DecorativeIcon 
+              name="checkbox-outline" 
+              style={[styles.decorativeIcon, styles.bottomLeft]} 
+              color="#8FD49A"
+            />
+            <DecorativeIcon 
+              name="document-text-outline" 
+              style={[styles.decorativeIcon, styles.bottomRight]} 
+              color="#8FD49A"
+            />
+            
+            <TouchableOpacity 
+              style={[
+                styles.menuButton, 
+                styles.quizButton,
+                styles.buttonShadow,
+                { 
+                  width: buttonWidth, 
+                  height: buttonHeight,
+                  marginBottom: isSmallScreen ? 10 : 15
+                }
+              ]}
+              onPress={() => {
+                playQuizSound();
+                navigation.navigate('Quiz', { mode: 'quizzes' });
+              }}
+            >
+              <Ionicons name="list" size={iconSize} color="white" />
+              <Text style={[styles.buttonText, { fontSize: buttonFontSize, fontFamily: 'DynaPuff' }]}>QUIZ</Text>
+            </TouchableOpacity>
+          </View>
           
-          <TouchableOpacity 
-            style={[
-              styles.menuButton, 
-              styles.leaderboardButton,
-              styles.buttonShadow,
-              { 
-                width: buttonWidth, 
-                height: buttonHeight,
-                marginBottom: isSmallScreen ? 10 : 15
-              }
-            ]}
-            onPress={() => {
-              playLeaderboardSound();
-              navigation.navigate('Ranking')
-              // Keep your existing navigation or logic here if needed
-            }}
-          >
-            <Ionicons name="trophy" size={iconSize} color="white" />
-            <Text style={[styles.buttonText, { fontSize: buttonFontSize, fontFamily: 'DynaPuff' }]}>LEADERBOARD</Text>
-          </TouchableOpacity>
+          {/* LEADERBOARD Button with decorative icons */}
+          <View style={styles.buttonWrapper}>
+            {/* Decorative icons for Leaderboard */}
+            <DecorativeIcon 
+              name="trophy-outline" 
+              style={[styles.decorativeIcon, styles.topLeft]} 
+              color="#FC6D91"
+            />
+            <DecorativeIcon 
+              name="medal-outline" 
+              style={[styles.decorativeIcon, styles.topRight]} 
+              color="#FC6D91"
+            />
+            <DecorativeIcon 
+              name="ribbon-outline" 
+              style={[styles.decorativeIcon, styles.bottomLeft]} 
+              color="#FC6D91"
+            />
+            <DecorativeIcon 
+              name="star-outline" 
+              style={[styles.decorativeIcon, styles.bottomRight]} 
+              color="#FC6D91"
+            />
+            
+            <TouchableOpacity 
+              style={[
+                styles.menuButton, 
+                styles.leaderboardButton,
+                styles.buttonShadow,
+                { 
+                  width: buttonWidth, 
+                  height: buttonHeight,
+                  marginBottom: isSmallScreen ? 10 : 15
+                }
+              ]}
+              onPress={() => {
+                playLeaderboardSound();
+                navigation.navigate('Ranking')
+                // Keep your existing navigation or logic here if needed
+              }}
+            >
+              <Ionicons name="trophy" size={iconSize} color="white" />
+              <Text style={[styles.buttonText, { fontSize: buttonFontSize, fontFamily: 'DynaPuff' }]}>LEADERBOARD</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -333,17 +444,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
+  buttonWrapper: {
+    position: 'relative',
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  decorativeIcon: {
+    position: 'absolute',
+    zIndex: 1,
+  },
+  topLeft: {
+    top: -10,
+    left: '10%',
+  },
+  topRight: {
+    top: -10,
+    right: '10%',
+  },
+  bottomLeft: {
+    bottom: 5,
+    left: '10%',
+  },
+  bottomRight: {
+    bottom: 5,
+    right: '10%',
+  },
   menuButton: {
     flexDirection: 'row',
     width: '70%',
     height: 60,
     borderRadius: 100,
-    marginBottom: 15,
     paddingHorizontal: 20,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'black',
+    zIndex: 2,
   },
   buttonShadow: {
     shadowColor: '#000',
@@ -368,6 +505,7 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
-    borderColor: '#000'
+    borderColor: '#000',
+    marginLeft: 8,
   },
 });
